@@ -43,13 +43,14 @@ app.delete('/api/customers/:id', (req, res) => {
     });
 });
 
-// Get all orders with customer names
+// Get all orders with customer names and dish names
 app.get('/api/orders', (req, res) => {
     const { date, month, year } = req.query;
     let query = `
-        SELECT o.*, c.name as customer_name 
+        SELECT o.*, c.name as customer_name, m.name as dish_name 
         FROM orders o 
         JOIN customers c ON o.customer_id = c.id
+        LEFT JOIN menu m ON o.menu_id = m.id
     `;
     let params = [];
 
@@ -70,29 +71,27 @@ app.get('/api/orders', (req, res) => {
 
 // Create a new order
 app.post('/api/orders', (req, res) => {
-    const { customer_id, date, shift, quantity } = req.body;
-    if (!customer_id || !date || !shift || !quantity) {
+    const { customer_id, menu_id, date, shift, quantity } = req.body;
+    if (!customer_id || !menu_id || !date || !shift || !quantity) {
         return res.status(400).json({ error: "Missing required fields" });
     }
 
-    const query = "INSERT INTO orders (customer_id, date, shift, quantity) VALUES (?, ?, ?, ?)";
-    db.run(query, [customer_id, date, shift, quantity], function(err) {
+    const query = "INSERT INTO orders (customer_id, menu_id, date, shift, quantity) VALUES (?, ?, ?, ?, ?)";
+    db.run(query, [customer_id, menu_id, date, shift, quantity], function(err) {
         if (err) return res.status(500).json({ error: err.message });
-        res.json({ id: this.lastID, customer_id, date, shift, quantity, status: 'Pending' });
+        res.json({ id: this.lastID, customer_id, menu_id, date, shift, quantity, status: 'Pending' });
     });
 });
 
-// Generate shopping list for a date/shift range
+// Generate shopping list for a date
 app.get('/api/shopping-list', (req, res) => {
     const { date } = req.query;
     if (!date) return res.status(400).json({ error: "Date is required" });
 
-    // For simplicity, we assume all orders for that date use a standard recipe ratio
-    // In a real app, you'd link specific orders to specific menu items
     const query = `
         SELECT i.item_name, SUM(o.quantity * i.amount_per_portion) as total_amount, i.unit
         FROM orders o
-        CROSS JOIN ingredients i
+        JOIN ingredients i ON o.menu_id = i.menu_id
         WHERE o.date = ?
         GROUP BY i.item_name
     `;
@@ -112,10 +111,10 @@ app.get('/api/menu', (req, res) => {
 });
 
 app.post('/api/menu', (req, res) => {
-    const { name, category } = req.body;
-    db.run("INSERT INTO menu (name, category) VALUES (?, ?)", [name, category], function(err) {
+    const { name, category, price } = req.body;
+    db.run("INSERT INTO menu (name, category, price) VALUES (?, ?, ?)", [name, category, price || 0], function(err) {
         if (err) return res.status(500).json({ error: err.message });
-        res.json({ id: this.lastID, name, category });
+        res.json({ id: this.lastID, name, category, price });
     });
 });
 
@@ -150,13 +149,26 @@ app.delete('/api/ingredients/:id', (req, res) => {
     });
 });
 
-// Update delivery status
-app.post('/api/delivery', (req, res) => {
-    const { order_id, delivery_time, recipient_name, status } = req.body;
-    const query = "INSERT INTO deliveries (order_id, delivery_time, recipient_name, status) VALUES (?, ?, ?, ?)";
-    db.run(query, [order_id, delivery_time, recipient_name, status], function(err) {
+// Reporting API
+app.get('/api/reports/monthly', (req, res) => {
+    const { year } = req.query;
+    if (!year) return res.status(400).json({ error: "Year is required" });
+
+    const query = `
+        SELECT 
+            strftime('%m', o.date) as month,
+            SUM(o.quantity) as total_quantity,
+            SUM(o.quantity * m.price) as total_revenue
+        FROM orders o
+        JOIN menu m ON o.menu_id = m.id
+        WHERE strftime('%Y', o.date) = ?
+        GROUP BY month
+        ORDER BY month ASC
+    `;
+
+    db.all(query, [year], (err, rows) => {
         if (err) return res.status(500).json({ error: err.message });
-        res.json({ id: this.lastID });
+        res.json(rows);
     });
 });
 

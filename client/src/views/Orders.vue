@@ -20,6 +20,15 @@
           </div>
 
           <div class="form-group">
+            <label class="form-label">Chọn Món Ăn</label>
+            <select v-model="form.menu_id" class="form-input" required>
+              <option v-for="m in menuItems" :key="m.id" :value="m.id">
+                {{ m.name }} ({{ m.price.toLocaleString() }}đ)
+              </option>
+            </select>
+          </div>
+
+          <div class="form-group">
             <label class="form-label">Ngày Giao</label>
             <input type="date" v-model="form.date" class="form-input" required />
           </div>
@@ -70,6 +79,7 @@
             <tr>
               <th>ID</th>
               <th>Khách Hàng</th>
+              <th>Món Ăn</th>
               <th>Ngày</th>
               <th>Ca</th>
               <th>Số Lượng</th>
@@ -80,6 +90,7 @@
             <tr v-for="order in orders" :key="order.id">
               <td>#{{ order.id }}</td>
               <td><strong>{{ order.customer_name }}</strong></td>
+              <td>{{ order.dish_name }}</td>
               <td>{{ order.date }}</td>
               <td>Ca {{ order.shift }}</td>
               <td>{{ order.quantity }}</td>
@@ -103,9 +114,11 @@ import axios from 'axios';
 const API_URL = 'http://localhost:3001/api';
 
 const customers = ref([]);
+const menuItems = ref([]);
 const orders = ref([]);
 const form = ref({
   customer_id: '',
+  menu_id: '',
   date: new Date().toISOString().split('T')[0],
   shift1: 0,
   shift2: 0,
@@ -117,6 +130,16 @@ const fetchCustomers = async () => {
     const res = await axios.get(`${API_URL}/customers`);
     customers.value = res.data;
     if (customers.value.length > 0) form.value.customer_id = customers.value[0].id;
+  } catch (err) {
+    console.error(err);
+  }
+};
+
+const fetchMenu = async () => {
+  try {
+    const res = await axios.get(`${API_URL}/menu`);
+    menuItems.value = res.data;
+    if (menuItems.value.length > 0) form.value.menu_id = menuItems.value[0].id;
   } catch (err) {
     console.error(err);
   }
@@ -143,6 +166,7 @@ const submitOrder = async () => {
       if (s.qty > 0) {
         await axios.post(`${API_URL}/orders`, {
           customer_id: form.value.customer_id,
+          menu_id: form.value.menu_id,
           date: form.value.date,
           shift: s.shift,
           quantity: s.qty
@@ -176,6 +200,7 @@ const pendingOrders = computed(() => {
 
 onMounted(() => {
   fetchCustomers();
+  fetchMenu();
   fetchOrders();
 });
 </script>

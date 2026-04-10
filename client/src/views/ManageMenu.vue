@@ -17,7 +17,7 @@
               @click="selectMenu(m)">
             <div class="menu-info">
               <div class="menu-name">{{ m.name }}</div>
-              <div class="menu-cat">{{ m.category }}</div>
+              <div class="menu-cat">{{ m.category }} - {{ m.price.toLocaleString() }}đ</div>
             </div>
             <button class="btn-icon" @click.stop="deleteMenu(m.id)">🗑️</button>
           </li>
@@ -68,13 +68,19 @@
             <label class="form-label">Tên Món</label>
             <input type="text" v-model="menuForm.name" class="form-input" required placeholder="VD: Cơm Cá Kho" />
           </div>
-          <div class="form-group">
-            <label class="form-label">Phân Loại</label>
-            <select v-model="menuForm.category" class="form-input">
-              <option value="Main">Món Chính</option>
-              <option value="Side">Món Phụ</option>
-              <option value="Soup">Canh</option>
-            </select>
+          <div class="grid" style="grid-template-columns: 1fr 1fr; gap: 10px;">
+            <div class="form-group">
+              <label class="form-label">Phân Loại</label>
+              <select v-model="menuForm.category" class="form-input">
+                <option value="Main">Món Chính</option>
+                <option value="Side">Món Phụ</option>
+                <option value="Soup">Canh</option>
+              </select>
+            </div>
+            <div class="form-group">
+              <label class="form-label">Giá (VNĐ)</label>
+              <input type="number" v-model="menuForm.price" class="form-input" required />
+            </div>
           </div>
           <div style="display: flex; gap: 10px; justify-content: flex-end;">
             <button type="button" class="btn" @click="showAddMenuModal = false">Hủy</button>
@@ -129,7 +135,7 @@ const ingredients = ref([]);
 const showAddMenuModal = ref(false);
 const showAddIngModal = ref(false);
 
-const menuForm = ref({ name: '', category: 'Main' });
+const menuForm = ref({ name: '', category: 'Main', price: 0 });
 const ingForm = ref({ item_name: '', amount_per_portion: 0, unit: 'g' });
 
 const fetchMenu = async () => {
@@ -149,7 +155,7 @@ const selectMenu = async (m) => {
 const saveMenu = async () => {
   await axios.post(`${API_BASE}/menu`, menuForm.value);
   showAddMenuModal.value = false;
-  menuForm.value = { name: '', category: 'Main' };
+  menuForm.value = { name: '', category: 'Main', price: 0 };
   fetchMenu();
 };
 

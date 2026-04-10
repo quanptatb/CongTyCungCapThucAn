@@ -5,6 +5,7 @@ import Market from '../views/Market.vue'
 import Delivery from '../views/Delivery.vue'
 import ManageCustomers from '../views/ManageCustomers.vue'
 import ManageMenu from '../views/ManageMenu.vue'
+import Reports from '../views/Reports.vue'
 
 const routes = [
   { path: '/', name: 'Dashboard', component: Dashboard },
@@ -13,6 +14,7 @@ const routes = [
   { path: '/delivery', name: 'Delivery', component: Delivery },
   { path: '/manage-customers', name: 'ManageCustomers', component: ManageCustomers },
   { path: '/manage-menu', name: 'ManageMenu', component: ManageMenu },
+  { path: '/reports', name: 'Reports', component: Reports },
 ]
 
 const router = createRouter({

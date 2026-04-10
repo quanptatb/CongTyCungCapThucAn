@@ -18,6 +18,9 @@
         <router-link to="/delivery" class="nav-item" active-class="active">
           Giao Hàng (Delivery)
         </router-link>
+        <router-link to="/reports" class="nav-item" active-class="active">
+          Báo Cáo & Thống Kê
+        </router-link>
         <div style="margin-top: 1.5rem; padding: 0 1rem; font-size: 0.75rem; color: rgba(255,255,255,0.5); text-transform: uppercase; letter-spacing: 0.05em;">Quản Lý</div>
         <router-link to="/manage-customers" class="nav-item" active-class="active">
           Khách Hàng

@@ -32,18 +32,21 @@ function initializeDatabase() {
         db.run(`CREATE TABLE IF NOT EXISTS orders (
             id INTEGER PRIMARY KEY AUTOINCREMENT,
             customer_id INTEGER,
+            menu_id INTEGER,
             date TEXT NOT NULL,
             shift INTEGER NOT NULL, -- 1, 2, 3
             quantity INTEGER NOT NULL,
             status TEXT DEFAULT 'Pending', -- Pending, Completed
-            FOREIGN KEY (customer_id) REFERENCES customers(id)
+            FOREIGN KEY (customer_id) REFERENCES customers(id),
+            FOREIGN KEY (menu_id) REFERENCES menu(id)
         )`);
 
         // Menu Items Table
         db.run(`CREATE TABLE IF NOT EXISTS menu (
             id INTEGER PRIMARY KEY AUTOINCREMENT,
             name TEXT NOT NULL,
-            category TEXT
+            category TEXT,
+            price REAL DEFAULT 0
         )`);
 
         // Ingredients Table (Recipe link)
@@ -69,12 +72,12 @@ function initializeDatabase() {
         // Seed some menu items and ingredients
         db.get("SELECT COUNT(*) as count FROM menu", (err, row) => {
             if (row.count === 0) {
-                db.run("INSERT INTO menu (name, category) VALUES (?, ?)", ['Cơm Sườn', 'Main'], function(err) {
+                db.run("INSERT INTO menu (name, category, price) VALUES (?, ?, ?)", ['Cơm Sườn', 'Main', 35000], function(err) {
                     const menuId = this.lastID;
                     db.run("INSERT INTO ingredients (menu_id, item_name, amount_per_portion, unit) VALUES (?, ?, ?, ?)", [menuId, 'Gạo', 150, 'g']);
                     db.run("INSERT INTO ingredients (menu_id, item_name, amount_per_portion, unit) VALUES (?, ?, ?, ?)", [menuId, 'Sườn heo', 200, 'g']);
                 });
-                db.run("INSERT INTO menu (name, category) VALUES (?, ?)", ['Cơm Gà', 'Main'], function(err) {
+                db.run("INSERT INTO menu (name, category, price) VALUES (?, ?, ?)", ['Cơm Gà', 'Main', 30000], function(err) {
                     const menuId = this.lastID;
                     db.run("INSERT INTO ingredients (menu_id, item_name, amount_per_portion, unit) VALUES (?, ?, ?, ?)", [menuId, 'Gạo', 150, 'g']);
                     db.run("INSERT INTO ingredients (menu_id, item_name, amount_per_portion, unit) VALUES (?, ?, ?, ?)", [menuId, 'Thịt gà', 150, 'g']);
