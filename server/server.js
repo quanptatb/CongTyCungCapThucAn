@@ -83,6 +83,27 @@ app.post('/api/orders', (req, res) => {
     });
 });
 
+// Bulk Create orders
+app.post('/api/orders/bulk', (req, res) => {
+    const orders = req.body; // Array of orders
+    if (!Array.isArray(orders)) return res.status(400).json({ error: "Data must be an array" });
+
+    db.serialize(() => {
+        db.run("BEGIN TRANSACTION");
+        const stmt = db.prepare("INSERT INTO orders (customer_id, menu_id, date, shift, quantity) VALUES (?, ?, ?, ?, ?)");
+        
+        orders.forEach(o => {
+            stmt.run([o.customer_id, o.menu_id, o.date, o.shift, o.quantity]);
+        });
+        
+        stmt.finalize();
+        db.run("COMMIT", (err) => {
+            if (err) return res.status(500).json({ error: err.message });
+            res.json({ success: true, count: orders.length });
+        });
+    });
+});
+
 // Generate shopping list for a date
 app.get('/api/shopping-list', (req, res) => {
     const { date } = req.query;

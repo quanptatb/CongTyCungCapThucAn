@@ -2,7 +2,12 @@
   <div class="orders-view">
     <div class="header">
       <h1>Quản Lý Đơn Hàng (Báo Cơm)</h1>
-      <div class="date-now">{{ new Date().toLocaleDateString('vi-VN') }}</div>
+      <div style="display: flex; gap: 10px;">
+        <button class="btn btn-primary" style="background: var(--secondary);" @click="showImport = true">
+          📂 Import Excel
+        </button>
+        <div class="date-now">{{ new Date().toLocaleDateString('vi-VN') }}</div>
+      </div>
     </div>
 
     <div class="grid">
@@ -104,18 +109,28 @@
         </table>
       </div>
     </div>
+
+    <ExcelImport 
+      :isOpen="showImport" 
+      :customers="customers" 
+      :menu="menuItems"
+      @close="showImport = false"
+      @success="handleImportSuccess"
+    />
   </div>
 </template>
 
 <script setup>
 import { ref, onMounted, computed } from 'vue';
 import axios from 'axios';
+import ExcelImport from '../components/ExcelImport.vue';
 
 const API_URL = 'http://localhost:3001/api';
 
 const customers = ref([]);
 const menuItems = ref([]);
 const orders = ref([]);
+const showImport = ref(false);
 const form = ref({
   customer_id: '',
   menu_id: '',
@@ -185,6 +200,11 @@ const submitOrder = async () => {
     console.error(err);
     alert('Có lỗi xảy ra khi lưu thông tin.');
   }
+};
+
+const handleImportSuccess = () => {
+  fetchOrders();
+  alert('Đã import đơn hàng thành công!');
 };
 
 const todayTotal = computed(() => {
